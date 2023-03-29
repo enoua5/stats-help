@@ -1,0 +1,213 @@
+<head>
+  <title>Estimator Explainer</title>
+  <meta charset="UTF-8">
+</head>
+
+<h1>Estimators</h1>
+<p>I figured that the main thing that is confusing you about all these estimators is that you're getting too lost in the math and symbols, and you need to take a step back and look at a "real world" (even if very contrived) example.</p>
+
+<p>Imagine I have a box full of dice. I won't tell you how many are in there, and I won't tell you how many sides they have. However, I will tell you they all have the same number of sides, and that I'm not adding or removing any. If you shake the box, I will peak in and tell you how many dice showed up as a 1.</p>
+
+<p>If you needed to guess how many dice there are and how many sides those dice have, how would you go about that? This is what the method of moments (or whatever it was called) comes into play.</p>
+
+<b>Recall from class:</b>
+<p>
+We have a fixed number of <i>trials</i>, with a fixed probability of success, and we're getting the total number of successes in that set of <i>trials</i>. That's a <i>binomial ditribution.</i>
+</p>
+<p>
+This means μ = np
+and σ² = np(1-p).
+</p>
+<p>
+Solving n and p in terms of μ and σ², we get:
+n = μ² / (μ - σ²)
+and p = 1 - (σ² / μ).
+</p>
+<p>
+We can substitute out μ→x̄, σ²→S², n→n̂, and p→p̂. These give us out <i>estimators</i>. We will need to take <i>samples</i> of our distribution to have numbers to plug into these estimators. <b>Note</b> that a <i>sample</i> in this case is shaking the box and reading out the number of ones. This is different from <i>trials</i>, which is each individual die rolling a number.
+</p>
+<p>
+Once we've taken the samples, we can find x̄ by finding the arithmatic mean of the sample set, and we can find S² by summing the square differences of the samples from x̄ and dividing by one less than the number of samples (just look at the equation you wrote in your notes).
+</p>
+
+<b>Back to the dice box</b>
+<p>
+Now we can just plug x̄ and S² into our estimators to get estimates for p and n. Our estimate for the number of dice is n̂, and our estimate for the number of sides is 1/p̂.
+</p>
+
+<h2>The interactive bit</h2>
+
+<p>I programmed this little demonstration for you to see this in action.</p>
+<p>When you loaded the page, the program chose a random number of a random die, and took two samples (our estimators require at least two samples to work).</p>
+
+<p>
+On the left is a table showing the results from the expiriment so far. On the right (or perhaps beneath if you're on your phone) there's a dropdown menu you can click to see the actual behind-the-scenes calculated values.
+</p>
+
+<p>Below both of those are two buttons. "Shake the box" will take one sample, and update the expiriment information. "Start/Stop Autoshake" will just take samples automatically at a high rate. I added it becuase I found that it typically takes a few hundred samples before the estimators start becoming very accurate.</p>
+<hr>
+<div style="float: left">
+  <table>
+    <tr>
+      <th>Samples</th>
+      <td id="trials"></td>
+    </tr>
+    <tr>
+      <th>x̄</th>
+      <td id="x-bar"></td>
+    </tr>
+    <tr>
+      <th>S²</th>
+      <td id="s-sqr"></td>
+    </tr>
+    <tr>
+      <th>p̂</th>
+      <td id="p-hat"></td>
+    </tr>
+    <tr>
+      <th>n̂</th>
+      <td id="n-hat"></td>
+    </tr>
+    <tr>
+      <th>Dice ... Hat?</th>
+      <td id="dice"></td>
+    </tr>
+  </table>
+</div>
+<div style="float: right">
+  <details>
+    <summary>Open to see actual values</summary>
+    <table>
+    <tr>
+      <th>μ</th>
+      <td id="real-x"></td>
+    </tr>
+    <tr>
+      <th>σ²</th>
+      <td id="real-s"></td>
+    </tr>
+    <tr>
+      <th>p</th>
+      <td id="real-p"></td>
+    </tr>
+    <tr>
+      <th>n</th>
+      <td id="real-n"></td>
+    </tr>
+    <tr>
+      <th>Dice</th>
+      <td id="real-dice"></td>
+    </tr>
+  </table>
+  </details>
+</div>
+<hr style="clear:both">
+<br>
+<button onclick="step()">Shake the box</button>
+<button onclick="toggle_super_shake()" id="super-shake-btn">Start Autoshake</button>
+
+<ol id="rolls">
+
+</ol>
+<script>
+const sum_reducer=(sum, i)=>{return i+sum};
+
+function est_x_bar(vals)
+{
+  return vals.reduce(sum_reducer)/vals.length;
+}
+
+function est_s_sqr(vals)
+{
+  let x = est_x_bar(vals);
+  return vals.map(i=>(i-x)**2).reduce(sum_reducer, 0)/(vals.length-1);
+}
+
+function est_p_hat(vals)
+{
+  return 1 - (est_s_sqr(vals)/est_x_bar(vals));
+}
+
+function est_n_hat(vals)
+{
+  let x = est_x_bar(vals);
+  return x / (1 - (est_s_sqr(vals)/x))
+}
+
+function roll_nDs(n, s)
+{
+  let rolls = [];
+  for(let i = 0; i < n; i++)
+    rolls.push(Math.floor(Math.random()*s)+1);
+  return rolls;
+}
+
+function roll_nDs_count_ones(n,s)
+{
+  return roll_nDs(n,s).reduce((c,i)=>i==1?c+1:c, 0);
+}
+
+function est()
+{
+  document.getElementById("trials").innerText = rolls.length;
+  document.getElementById("x-bar").innerText = est_x_bar(rolls);
+  document.getElementById("s-sqr").innerText = est_s_sqr(rolls);
+  document.getElementById("p-hat").innerText = est_p_hat(rolls);
+  document.getElementById("n-hat").innerText = est_n_hat(rolls);
+  let count = Math.round(est_n_hat(rolls));
+  let sides = Math.round(est_p_hat(rolls)**-1)
+  document.getElementById("dice").innerText = count+"d"+sides;
+}
+
+let N = Math.ceil(Math.random()*100);
+let S = [4,6,8,10,12,20][Math.floor(Math.random()*6)];
+document.getElementById("real-x").innerText = N/S;
+document.getElementById("real-s").innerText = (N/S)*(1-(1/S));
+document.getElementById("real-p").innerText = 1/S;
+document.getElementById("real-n").innerText = N;
+document.getElementById("real-dice").innerText = N+"d"+S;
+let rolls = [];
+
+function add_roll()
+{
+  let count = roll_nDs_count_ones(N, S) 
+  rolls.push(count);
+  let li = document.createElement("li");
+  li.innerText = count;
+  document.getElementById("rolls").prepend(li);
+}
+
+add_roll();
+
+function step()
+{
+  add_roll();
+  est();
+}
+
+function toggle_super_shake()
+{
+  if(super_shaking)
+  {
+    document.getElementById("super-shake-btn").innerText = "Start Autoshake";
+    super_shaking = false;
+  }
+  else
+  {
+    document.getElementById("super-shake-btn").innerText = "Stop Autoshake";
+    super_shaking = true;
+  } 
+}
+
+let super_shaking = false;
+function super_shake()
+{
+  if(super_shaking)
+    step();
+}
+
+setInterval(super_shake, 20);
+
+step();
+
+</script>
