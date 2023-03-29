@@ -159,7 +159,7 @@ function est()
   document.getElementById("dice").innerText = count+"d"+sides;
 }
 
-let N = Math.ceil(Math.random()*100);
+let N = Math.ceil(Math.random()*10);
 let S = [4,6,8,10,12,20][Math.floor(Math.random()*6)];
 document.getElementById("real-x").innerText = N/S;
 document.getElementById("real-s").innerText = (N/S)*(1-(1/S));
